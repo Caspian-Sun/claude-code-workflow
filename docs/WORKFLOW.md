@@ -230,45 +230,63 @@ pnpm prd:import requirements/登录需求.docx
 
 ### Step 3.5 — Visual QA 视觉对比 (有设计截图时)
 
-`/code` 全部任务完成后会**自动触发**一次截图对比。也可以随时手动跑：
+模块完成后，手动针对每个屏幕/页面跑一次截图对比：
 
 ```bash
-/visual-qa
+# 自动检测平台（有 adb/hdc 设备 → 移动端；否则 → Web）
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png
 
-# 指定对比用的参考图
-/visual-qa docs/designs/screenshots/reference/xiaoguotu.png
+# 指定平台
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png web
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png android
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png ohos
+
+# 多台设备时，指定设备 ID（adb devices / hdc list targets 查询）
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png android R3CR40XXXXX
+/visual-qa docs/designs/screenshots/reference/主功能/01_home.png ohos FMR0XXXXX
 ```
 
 **脚本会自动做**：
 
-1. 检测 dev server 是否在 `http://localhost:8000` 运行
-   - **运行中** → 直接用 Playwright 截图
-   - **未运行** → 自动 `pnpm dev` 启动，截图完毕自动关闭
-2. ImageMagick 像素对比，分区域（TopBar / Pipeline / Board）分别打分
-3. 生成三级判定：
+1. **平台检测**（`auto` 模式）：检测到 adb/hdc 设备 → 移动端截图；否则 → Web
+2. **截图**：
+   - Web：检测 dev server（port 8000） → 已运行则直接截图，否则自动启动 `pnpm dev`
+   - Android：`adb exec-out screencap -p`
+   - 鸿蒙：`hdc shell snapshot_display -f xxx.jpeg`（自动处理 .jpeg→.png 转换）
+3. ImageMagick RMSE 像素对比，生成差值图 + 左右拼接对比图
+4. 生成三级判定：
 
-   | 级别 | 检查项 | 不通过时 |
-   |------|--------|---------|
-   | **P0 结构** | TopBar + Pipeline 区域 RMSE < 0.35 | **必须修复，阻塞继续** |
-   | **P1 视觉 Token** | 整体 RMSE < 0.25（颜色/间距/圆角） | 建议修复 |
-   | **P2 像素级** | 整体 RMSE < 0.15 | 记录，不阻塞 |
+   | 级别 | RMSE 阈值 | 不通过时 |
+   |------|-----------|---------|
+   | **P0 结构** | < 0.20 | **必须修复，阻塞继续** |
+   | **P1 视觉 Token** | < 0.10（≥90% 相似） | 建议修复 |
+   | **P2 像素级** | < 0.05（≥95% 相似） | 记录，不阻塞 |
 
-4. 产出文件到 `docs/designs/screenshots/actual/`：
-   - `actual-web.png` — 本次截图
-   - `diff.png` — 红色高亮差异区域
-   - `side-by-side.png` — 左右拼接对比图
-   - `qa-result.json` — 结构化指标数据
+5. 产出文件（**镜像 reference 目录结构**，每张设计稿独立子目录，多屏同跑不互相覆盖）：
+   ```
+   docs/designs/screenshots/actual/
+   └── 主功能/
+       └── 01_home/
+           ├── actual.png       — 截图
+           ├── diff.png         — 红色=差异区域
+           ├── side-by-side.png — 左(蓝框设计稿) 右(绿框实际)
+           └── qa-result.json   — 结构化指标
+   ```
 
 **你要做**：
-- 打开 `docs/designs/screenshots/actual/side-by-side.png` 看左右对比
-- P0/P1 有差异时 AI 会自动定位到 `.less` / `.module.css` / `.tsx` 修复，最多 3 轮
+- 看 `side-by-side.png` 左右对比判断差异
+- P0/P1 有差异时按根因溯源修复（任务未跑 → `/code --only`；实现偏差 → 改代码），最多 3 轮
 - P2 差异记录在 JSON 里，不影响进度
 
-**设计截图放哪**：把设计稿导出的截图放到 `docs/designs/screenshots/reference/` 即可。
+**设计截图放哪**：按功能分类放入 `docs/designs/screenshots/reference/<分类>/` 即可。
+
+**移动端真机工作流**：先手动操作 App 到目标页面，再触发 `/visual-qa` 截取当前屏幕（与模拟器命令完全相同）。
 
 **常见卡点**：
-- ❓ RMSE 偏高但视觉上差不多 → 正常，页面有动态内容或未登录状态会拉高 RMSE，以 side-by-side 为准
-- ❓ dev server 端口不是 8000 → 修改 `docs/designs/screenshots/run-visual-qa.sh` 里的 `PORT` 变量
+- ❓ RMSE 偏高但视觉上差不多 → 系统状态栏（时间/信号）会拉高 RMSE，以 side-by-side.png 肉眼为准
+- ❓ Web dev server 端口不是 8000 → 修改 `run-visual-qa.sh` 里的 `PORT` 变量
+- ❓ 鸿蒙截图空文件 → `snapshot_display` 只接受 `.jpeg` 扩展名，脚本已处理；确认 `hdc -v` 可输出版本
+- ❓ 未检测到设备 → `adb devices` / `hdc list targets` 确认连接；多设备时加第三个参数指定 ID
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-description: Visual QA — 截取当前应用截图，与设计稿像素对比，输出 P0/P1/P2 报告
-argument-hint: [@docs/designs/screenshots/reference/xxx.png]
+description: Visual QA — 截取当前应用截图，与设计稿像素对比，输出 P0/P1/P2 报告（支持 Web / Android / 鸿蒙）
+argument-hint: [<reference_image> [web|android|ohos|auto] [device_id]]
 allowed-tools: Bash, Read, Edit, Glob, Grep
 helper: true
 ---
@@ -16,20 +16,23 @@ bash docs/designs/screenshots/run-visual-qa.sh $ARGUMENTS
 ```
 
 脚本会自动完成：
-- 检测 dev server 是否在 port 8000 运行 → 直接截图
-- 未运行 → 自动 `pnpm dev` 启动，截图后自动关闭
+- **平台检测**：`auto` 模式下，检测到 adb/hdc 设备 → 移动端截图；否则 → Web Playwright 截图
+- **Web**：检测 dev server 是否在 port 8000 运行 → 直接截图；未运行 → 自动 `pnpm dev` 启动
+- **Android**：`adb exec-out screencap -p` 截图
+- **鸿蒙**：`hdc shell snapshot_display -f xxx.jpeg`（注意：必须 .jpeg，.png 会报错）→ 接收后转 .png
 - ImageMagick 像素对比，生成差值图 + 左右拼接对比图
-- 结果写入 `docs/designs/screenshots/actual/qa-result.json`
+- 结果写入 `docs/designs/screenshots/actual/<分类>/<文件名>/qa-result.json`
 
 ### 第二步: 读取结果并视觉分析
 
-1. 读取量化指标：
+1. 读取量化指标（路径跟随 reference 目录结构镜像生成）：
    ```bash
-   cat docs/designs/screenshots/actual/qa-result.json
+   # 示例：reference/主功能/01_home.jpg 的结果在：
+   cat docs/designs/screenshots/actual/主功能/01_home/qa-result.json
    ```
 2. 用 Read 工具读取以下图像做视觉判断：
-   - `docs/designs/screenshots/actual/side-by-side.png`（左右拼接对比图）
-   - `docs/designs/screenshots/actual/diff.png`（红色=差异区域）
+   - `docs/designs/screenshots/actual/<分类>/<名称>/side-by-side.png`（左右拼接对比图）
+   - `docs/designs/screenshots/actual/<分类>/<名称>/diff.png`（红色=差异区域）
 
 ### 第三步: 输出报告
 
@@ -38,25 +41,24 @@ bash docs/designs/screenshots/run-visual-qa.sh $ARGUMENTS
 ```
 📸 Visual QA 报告
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-模式: web (localhost:8000)
-参考: docs/designs/screenshots/reference/xiaoguotu.png
-实际: docs/designs/screenshots/actual/actual-web.png
+平台: web (localhost:8000) | android (设备ID) | ohos (设备ID)
+参考: docs/designs/screenshots/reference/<分类>/xx.png
+实际: docs/designs/screenshots/actual/<分类>/<名称>/actual.png
 
-P0 结构 (必须 100% 通过)
-  ✅/❌ TopBar       RMSE=x.xxx
-  ✅/❌ Pipeline     RMSE=x.xxx
+P0 结构 (必须通过)
+  ✅/❌ 整体布局       RMSE=x.xxx
 
-P1 视觉 Token (≥ 95% 合格)
-  ✅/⚠️  整体相似度   RMSE=x.xxx
+P1 视觉 Token (≥ 90% 相似)
+  ✅/⚠️  整体相似度    RMSE=x.xxx
   差异项:
     - [ ] 区域/元素: 期望 xx, 实际 xx
 
-P2 像素级 (≥ 75% 合格, 不阻塞)
-  ✅/📌 精确度       RMSE=x.xxx
+P2 像素级 (≥ 95% 相似, 不阻塞)
+  ✅/📌 精确度        RMSE=x.xxx
 
 产出文件:
-  差值图:  docs/designs/screenshots/actual/diff.png
-  对比图:  docs/designs/screenshots/actual/side-by-side.png
+  差值图:  docs/designs/screenshots/actual/<分类>/<名称>/diff.png
+  对比图:  docs/designs/screenshots/actual/<分类>/<名称>/side-by-side.png
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 结论: ✅ 通过 | ❌ P0 失败，必须修复后重跑 | ⚠️ P1 有差异，建议修复
 下一步: /code --only <taskId> 修复差异 | 或确认接受差异继续
@@ -64,7 +66,7 @@ P2 像素级 (≥ 75% 合格, 不阻塞)
 
 ### 第四步: 上游溯源 — 确定根因层级
 
-差异不一定是代码写错了。先做根因分类，再决定修哪一层。**直接改 CSS 是最后一步，不是第一步。**
+差异不一定是代码写错了。先做根因分类，再决定修哪一层。**直接改代码是最后一步，不是第一步。**
 
 ```
 diff.png 有差异
@@ -99,8 +101,6 @@ diff.png 有差异
 
 #### 路径 A: 回修 PRD（根因在需求层）
 
-适用于：设计图里有某个 UI 区域，但 PRD 里完全没有对应章节，或业务规则缺少视觉约束。
-
 **情况 A1 — PRD 完全缺少某功能章节（需要新建任务）**
 
 ```
@@ -131,8 +131,6 @@ diff.png 有差异
 
 #### 路径 B: 补跑 /code（根因在执行层）
 
-适用于：tasks.json 里有这个任务但还没执行（status=pending），或 designRef 为空。
-
 **情况 B1 — 任务未执行（status=pending）**
 
 ```
@@ -146,7 +144,7 @@ diff.png 有差异
 ```
 最小改动:
   1. 用 Edit 直接改 tasks.json 里对应任务的 designRef 字段:
-       "designRef": "docs/designs/screenshots/reference/xiaoguotu.png#区域名"
+       "designRef": "docs/designs/screenshots/reference/<分类>/xx.png#区域名"
      （只改这一个字段，不动其他任务）
   2. /code @docs/tasks/tasks-xxx.json --only <taskId>
   3. /visual-qa 验证
@@ -156,38 +154,45 @@ diff.png 有差异
 
 #### 路径 C: 修代码（根因在实现层）
 
-适用于：PRD 有规则、任务已完成，但实现与设计不符。**只改出问题的那个文件，不碰其他文件。**
+**只改出问题的那个文件，不碰其他文件。**
 
 ```
 最小改动:
   1. 读 diff.png 定位红色区域 → 找到唯一的责任文件
   2. 读 side-by-side.png 肉眼对比，提取期望值
-  3. Grep 找到对应样式文件:
-       grep -r "区域名" workspace/src --include="*.less" --include="*.module.css" -l
-  4. 只用 Edit 修改该文件里出问题的那几行（不改其他选择器）
+  3. Grep 找到对应文件（Web：*.less / *.module.css；移动端：*.dart）
+  4. 只用 Edit 修改该文件里出问题的那几行
   5. /visual-qa 验证，最多 3 轮
 ```
 
-> ❌ 不要因为改了样式就顺手"优化"周边代码 — 只改导致差异的那一处
+> ❌ 不要因为改了一处就顺手"优化"周边代码 — 只改导致差异的那一处
 
 ---
 
 #### 接受差异（不修复）
 
-以下差异应标记为「已知/接受」，不进入修复流程：
-
 | 差异类型 | 原因 | 处置 |
 |---------|------|------|
 | 空列表 vs 设计稿有数据 | 数据内容差异，预期行为 | 报告注明，不修复 |
-| 字体渲染微差（P2） | 浏览器抗锯齿 vs 设计工具 | P2 接受 |
+| 字体渲染微差（P2） | 平台抗锯齿 vs 设计工具 | P2 接受 |
+| 系统状态栏（时间/信号） | 内容动态变化 | P2 接受 |
 | 3 轮修复后仍未收敛 | 根因复杂，超出自动修复范围 | 停下告知用户人工介入 |
 | 设计稿本身与 PRD 矛盾 | 设计稿未更新 | 让用户决定以哪个为准 |
 
 ## 注意事项
 
-- **RMSE 阈值仅供参考**：页面有动态内容或未登录状态会拉高 RMSE，需结合视觉判断
-- **参考图放哪**：把设计稿截图放入 `docs/designs/screenshots/reference/` 即可
-- **dev server 端口**：默认 8000 (UmiJS)，如项目用其他端口修改脚本里的 `PORT` 变量
-- **P2 差异不阻塞**：像素级细节（抗锯齿、字体微差）接受即可，不必强行修复
+### 通用
+- **RMSE 阈值仅供参考**：动态内容/未登录状态会拉高 RMSE，需结合 side-by-side.png 视觉判断
+- **参考图放哪**：按功能分类放入 `docs/designs/screenshots/reference/<分类>/` 目录
+- **产出自动分类**：每张设计稿对应独立子目录，多屏同跑不互相覆盖
+
+### Web 模式
+- dev server 端口默认 8000（UmiJS），如项目用其他端口修改脚本里的 `PORT` 变量
+
+### 移动端（Android / 鸿蒙）
+- **真机工作流**：先手动操作 App 到目标页面，再触发 `/visual-qa` 截取当前屏幕
+- **多设备**：`adb devices` / `hdc list targets` 查询 ID，作为第三个参数传入
+- **鸿蒙截图**：`snapshot_display` 只接受 `.jpeg` 扩展名，传 `.png` 会生成空文件（脚本已处理）
+- **HDC 路径**：需 DevEco Studio 已安装，脚本自动注入 PATH
 
 $ARGUMENTS
