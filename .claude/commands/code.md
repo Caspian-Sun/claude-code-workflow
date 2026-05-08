@@ -80,8 +80,17 @@ pending → in-progress → done
 对 tasks[] 里每个任务, 按以下步骤执行:
 
 1. **读 prdRef 原文** — 按 `task.prdRef` (如 `docs/prds/login.md#账号密码登录`) 定位到 PRD 二级标题下全部内容, 理解业务上下文
-2. **确认文件路径** — `task.filePath`, 目录不存在则创建
-3. **写代码**, 必须遵守:
+
+2. **读设计稿（有 designRef 时必须执行）** — 如果 `task.designRef` 非空, 用 Read 工具加载图片：
+   - 识别页面整体布局结构（顶部/中部/底部区域划分）
+   - 提取可见的颜色、字体大小、间距、圆角等视觉规格
+   - 列出页面包含的所有 UI 组件及其层级关系
+   - 将识别结果作为实现的**视觉参考**, 优先级高于凭感觉猜测
+   - `designRef` 为空时跳过此步
+
+3. **确认文件路径** — `task.filePath`, 目录不存在则创建
+
+4. **写代码**, 必须遵守:
    - **文件头 JSDoc** 包含 `@description` / `@module` / `@dependencies` / `@prd` / `@task` / `@rules` / `@design` (参考 `.claude/rules/file-docs.md`)
    - **`@prd` 字段**: 直接用 `task.prdRef` 原值
    - **`@task` 字段**: `docs/tasks/<文件名>.json#<taskId>`
@@ -90,9 +99,10 @@ pending → in-progress → done
    - **API 类型**: `import type { paths } from '@/types/api'`, **不得手写** request/response 类型
    - **禁止硬编码**: 文案走 i18n, 颜色/尺寸走 theme token, 枚举走常量 (参考 `.claude/rules/no-hardcode.md`)
    - **组件**: 函数式 + Props interface 导出 + 业务逻辑抽 hooks
-4. **维护目录 README.md** — 在文件所在目录的 README.md 文件清单加一行 (参考 `.claude/rules/file-docs.md`)
-5. **完成后更新 status** — 把 `tasks.json` 对应任务的 `status` 从 `in-progress` 改为 `done`
-6. **简短汇报** — 输出一句: 「✅ T00X 完成: <文件路径>」
+
+5. **维护目录 README.md** — 在文件所在目录的 README.md 文件清单加一行 (参考 `.claude/rules/file-docs.md`)
+6. **完成后更新 status** — 把 `tasks.json` 对应任务的 `status` 从 `in-progress` 改为 `done`
+7. **简短汇报** — 输出一句: 「✅ T00X 完成: <文件路径>」
 
 ### 什么时候停下问用户 (不要自作主张)
 
