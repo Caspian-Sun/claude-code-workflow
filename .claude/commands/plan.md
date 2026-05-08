@@ -44,6 +44,27 @@ outputs: ["tasks.json"]
    - 用户审阅 PRD 过程中可以独立跑 `/prd-check @docs/prds/xxx.md` 实时自检, 不必非要跑 `/plan` 才知道哪里没改完
    - `/plan` 和 `/prd-check` 共用同一份检查规则, 避免两处分叉
 
+## 第零点五步: 检测 Design Token（自动）
+
+在进入任务拆解前, 检查设计令牌体系是否已就绪:
+
+1. **检测 `docs/designs/DESIGN.md` 是否存在**
+   - 不存在 → 跳过本步, `designSystemRef` 字段留空, 继续
+
+2. **存在时, 检查 `docs/tasks/tasks-core-theme-*.json` 是否已生成**
+
+   **情况 A：core-theme 任务文件不存在**
+   - 读取 DESIGN.md, 按以下模板生成 `docs/tasks/tasks-core-theme-[当天日期].json`:
+     - T001 `tokens.ts` — 把 DESIGN.md 的 colors / spacing / rounded 导出为 CSS 变量或 JS 常量
+     - T002 `typography.ts` — 把 DESIGN.md typography 映射为项目字体样式（Tailwind / CSS Modules / styled-components，视项目选型决定）
+     - T003 `theme.ts` (或 `tailwind.config.ts`) — 组装完整 theme，注入到项目根
+   - 输出提示: 「✅ 检测到 DESIGN.md，已生成 docs/tasks/tasks-core-theme-[日期].json，**请先跑该文件再跑本模块**」
+   - 记录文件路径, 用于后续步骤填写 `preconditionRefs`
+
+   **情况 B：core-theme 任务文件已存在**
+   - 读取已有文件路径, 记录供后续步骤填写 `preconditionRefs`
+   - 输出提示: 「✅ 已有 [路径]，component/page 任务将声明依赖它」
+
 ## 分析步骤
 
 1. **理解需求**: 通读 PRD, 列出所有功能点 + 业务规则
@@ -119,6 +140,9 @@ page       (页面装配)              ← 来源: PRD 交互流程
   "prdRef": "docs/prds/user-list.md",
   "summary": "一句话概括这个模块做什么",
   "createdAt": "生成日期",
+  "preconditionRefs": [
+    "docs/tasks/tasks-core-theme-YYYY-MM-DD.json （若存在 DESIGN.md 时填入，否则省略此字段）"
+  ],
   "tasks": [
     {
       "taskId": "T001",
@@ -170,6 +194,7 @@ page       (页面装配)              ← 来源: PRD 交互流程
 - 每个任务都要有 `prdRef` + `businessRules` + `acceptanceCriteria` 三件套
 - 边界场景必须考虑: 空状态、加载中、错误、权限不足
 - `businessRules` 必须从 PRD 原文摘抄, 不得自创
+- **Design Token 依赖（有 DESIGN.md 时）**: 所有 type 为 `component` / `page` / `screen` / `widget` 的任务, 在 `description` 字段末尾追加一句「颜色/间距/圆角通过 theme token 引用，依赖 core-theme 任务先完成」; 任务文件顶层的 `preconditionRefs` 已声明, `/code` 执行时会自动校验
 
 ## 输出方式
 

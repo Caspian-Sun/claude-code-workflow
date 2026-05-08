@@ -88,9 +88,19 @@ pending → in-progress → done
    - 将识别结果作为实现的**视觉参考**, 优先级高于凭感觉猜测
    - `designRef` 为空时跳过此步
 
-3. **确认文件路径** — `task.filePath`, 目录不存在则创建
+3. **查 Design Token（task.type 为 screen / page / component / widget 时必须执行）**：
+   - 检查项目根目录是否存在 `docs/designs/DESIGN.md`；**不存在则跳过此步**
+   - 存在时读取 DESIGN.md，提取本任务涉及的 token：
+     - 颜色 → `colors.*`（通过 CSS 变量 / theme token 引用，禁止内联 hex）
+     - 字体 → `typography.*`（通过 theme textStyle 引用，禁止内联 fontSize/fontWeight）
+     - 间距 → `spacing.*`（通过 spacing 常量引用，禁止内联数字）
+     - 圆角 → `rounded.*`（通过 radius 常量引用，禁止内联数字）
+   - 确认项目已有 theme token 文件（如 `src/theme/`、`src/styles/tokens.ts`、`tailwind.config.ts` 等）；**文件不存在时停下**，提示先创建 theme token 任务再继续
+   - task.type 为其他类型（model/api/store/util/constant/i18n/config）时跳过此步
 
-4. **写代码**, 必须遵守:
+4. **确认文件路径** — `task.filePath`, 目录不存在则创建
+
+5. **写代码**, 必须遵守:
    - **文件头 JSDoc** 包含 `@description` / `@module` / `@dependencies` / `@prd` / `@task` / `@rules` / `@design` (参考 `.claude/rules/file-docs.md`)
    - **`@prd` 字段**: 直接用 `task.prdRef` 原值
    - **`@task` 字段**: `docs/tasks/<文件名>.json#<taskId>`
@@ -100,9 +110,9 @@ pending → in-progress → done
    - **禁止硬编码**: 文案走 i18n, 颜色/尺寸走 theme token, 枚举走常量 (参考 `.claude/rules/no-hardcode.md`)
    - **组件**: 函数式 + Props interface 导出 + 业务逻辑抽 hooks
 
-5. **维护目录 README.md** — 在文件所在目录的 README.md 文件清单加一行 (参考 `.claude/rules/file-docs.md`)
-6. **完成后更新 status** — 把 `tasks.json` 对应任务的 `status` 从 `in-progress` 改为 `done`
-7. **简短汇报** — 输出一句: 「✅ T00X 完成: <文件路径>」
+6. **维护目录 README.md** — 在文件所在目录的 README.md 文件清单加一行 (参考 `.claude/rules/file-docs.md`)
+7. **完成后更新 status** — 把 `tasks.json` 对应任务的 `status` 从 `in-progress` 改为 `done`
+8. **简短汇报** — 输出一句: 「✅ T00X 完成: <文件路径>」
 
 ### 什么时候停下问用户 (不要自作主张)
 
