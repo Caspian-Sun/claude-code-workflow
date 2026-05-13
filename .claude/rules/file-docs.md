@@ -69,6 +69,7 @@
  * @prd docs/prds/user-module.md#用户资料
  * @task docs/tasks/tasks-user.json#task-012
  * @design Figma: https://figma.com/file/xxx#Frame-UserProfile 或 docs/designs/user-profile.png
+ * @api docs/apis/user.md#getuserinfo, docs/apis/user.md#updateuserprofile
  * @rules
  *   - 非登录用户只能看公开字段 (昵称、头像)
  *   - 编辑模式下, 手机号需通过 PHONE_REG 校验
@@ -80,22 +81,23 @@
 
 对于不同类型的文件，注释需包含：
 
-- **组件**: description, module, dependencies, **prd, task, design, rules**, props 说明, example
-- **hooks**: description, module, **prd, task, rules**, params, returns, example
-- **stores**: description, module, **prd, task, rules**, state 字段说明, actions 说明
-- **utils**: description, module, params, returns, example (纯工具函数通常无需 prd/rules)
-- **api**: description, module, **prd**, 请求方法, 请求路径, params, returns
-- **types**: description, module, 各字段说明
+- **组件**: description, module, dependencies, **prd, task, design, rules**, props 说明, example, 调用接口时加 **api**
+- **hooks**: description, module, **prd, task, rules, api**, params, returns, example
+- **stores**: description, module, **prd, task, rules, api**, state 字段说明, actions 说明
+- **utils**: description, module, params, returns, example (纯工具函数通常无需 prd/rules/api)
+- **api**: description, module, **prd, api**(强相关, 必填), 请求方法, 请求路径, params, returns
+- **types**: description, module, 各字段说明; DTO/响应类型映射 OpenAPI Schema 时加 **api** 指向 Schema 锚点
 
 ### 业务锚点字段说明 (重要)
 
-`@prd` / `@task` / `@design` / `@rules` 是「需求 → 设计 → 代码 → 测试」可追溯链的关键, **编码时必须同步写入**:
+`@prd` / `@task` / `@design` / `@api` / `@rules` 是「需求 → 设计 → 协议 → 代码 → 测试」可追溯链的关键, **编码时必须同步写入**:
 
 | 字段 | 格式 | 作用 |
 |------|------|------|
 | `@prd` | `docs/prds/<文件>.md#<锚点>` | 指向对应的 PRD 片段, 供查阅需求原文 |
 | `@task` | `docs/tasks/<文件>.json#<taskId>` | 指向 `/plan` 生成的任务条目 |
 | `@design` | Figma URL / 本地文件路径 / 空 | 指向设计稿帧, 供对照视觉规范 (无设计稿可省略) |
+| `@api` | `docs/apis/<tag>.md#<operation-id>`, 多个用逗号分隔 | 指向协议层接口契约 (由 `tools/gen_api_md.py` 从 OpenAPI 生成)。api 层必填, hook/store/component 直接调接口时填 |
 | `@rules` | 多行中文规则列表, 每行一条 | 本文件承载的**业务规则**, 是测试断言的唯一来源 |
 
 **`@rules` 的写法原则**:
@@ -103,6 +105,12 @@
 - 每条规则都应该可以转化为一个测试用例
 - 如果规则来自 PRD, 尽量保留原文措辞, 便于对齐
 - 无业务规则的纯工具函数可省略 (如 `formatDate`), 但测试预期必须来自函数签名/JSDoc
+
+**`@api` 的写法原则**:
+- 指向 `docs/apis/<tag>.md` 中的 operation 锚点 (由 `tools/gen_api_md.py` 从 OpenAPI 生成)
+- 主源是 `docs/apis/openapi/*.json` 或 `workspace/api-spec/*.json`, **不要手改生成的 md**; 接口变更走「换 JSON → 重跑脚本」
+- 一个文件调多个接口时, 全部列出, 便于 `/review` 反向校验「代码调的接口是否在 PRD 圈定范围内」
+- DTO/响应 type (api 层入参/出参) 建议同时指向 OpenAPI Schema 锚点: `@api docs/apis/user.md#schema-userresp`
 
 **测试生成时的作用**: `/test` 命令会读取 `@rules` 作为测试用例骨架, 每条规则对应一个 `it()`, 从根本上避免 AI「根据源码猜预期」的问题。详见 `.claude/commands/test.md`。
 
