@@ -22,6 +22,10 @@ docs/
 │   ├── README.md          ← Test-side AI prompt snippet + integration notes
 │   ├── 2026-04-16-login.md
 │   └── screenshots/
+├── test-reports/          ← Per-run test report snapshots produced by /test (immutable)
+│   ├── README.md
+│   ├── _template.md
+│   └── 2026-05-19-1430-search-form.md
 └── retrospectives/        ← Read-only observation reports produced by /meta-audit (immutable snapshots)
     ├── README.md
     └── 2026-04-20-meta-audit.md
@@ -131,6 +135,36 @@ docs/prds/user-list.md  (contains the ## Search Form anchor)
 1. Grep the repo for `@prd .*#<old-heading>`
 2. Update source-code JSDoc in lockstep
 3. Mark "PRD anchor change" in the commit message
+
+## test-reports/ Directory
+
+Holds **per-run test report snapshots** produced by `/test`. Every invocation of `/test` writes a new file here — whether the run was green, partially red, or auto-fix gave up. Each report captures:
+
+- Execution summary (total / passed / failed / skipped / duration)
+- **Business Rule Traceability Matrix** — per source file, the `@rules` ↔ `it()` ↔ status mapping plus a numeric `Rule coverage: <covered>/<total>` line (the project's true coverage metric, per `.claude/rules/testing.md`)
+- Changes this round (added / modified / removed cases vs. previous report)
+- Open issues triaged by category (test code / environment / source bug) and rules still uncovered
+
+### Naming
+
+```
+docs/test-reports/<YYYY-MM-DD-HHmm>-<scope>.md
+```
+
+`<scope>` is kebab-case: a file base name (`search-form`), a module name (`features-list`), or `all` for project-wide runs.
+
+### Immutability
+
+Like `retrospectives/`, reports here are **append-only** — never edit a past report; let trends emerge from the time-sorted file list. See [test-reports/README.md](test-reports/README.md) for the full convention and [test-reports/_template.md](test-reports/_template.md) for the skeleton.
+
+### Relationship to bug-reports/
+
+| Source | Captures | Flows into |
+|--------|----------|------------|
+| `bug-reports/` | User-visible defects found by humans / E2E AI in the running app | `/fix` for batch fixing |
+| `test-reports/` | Unit & component test coverage / failures found by `/test` | Code review / retrospectives |
+
+They are complementary, not substitutes.
 
 ## retrospectives/ Directory
 

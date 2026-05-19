@@ -186,11 +186,60 @@ After generating/updating test files, **must proactively execute** to verify the
 
 3. **Loop until all green**: fix test → rerun → fix → rerun. Max 3 auto-fix rounds per session; if still failing, stop and report current status — do not loop indefinitely.
 
-4. **Final report** includes:
+4. **In-conversation report** (brief, for the user reading the chat) includes:
    - List of files generated/updated in this round
    - Test execution results (pass count / fail count)
    - Fix process (what adjustments were made and why)
    - Unresolved issues and recommendations
+
+### Step 5: Generate Test Report File (mandatory)
+
+**Regardless of outcome — whether tests are green, partially red, or auto-fix gave up — a report file must be written to `docs/test-reports/` before this command exits.** Red runs are equally valuable to keep on disk (so trend / regression can be reviewed later); never skip the report just because tests failed.
+
+#### Output Location & Naming
+
+```
+docs/test-reports/<YYYY-MM-DD-HHmm>-<module-or-scope>.md
+```
+
+- `<YYYY-MM-DD-HHmm>` — local time of when the run started (use 24-hour clock, e.g. `2026-05-19-1430`)
+- `<module-or-scope>` — kebab-case identifier reflecting `$ARGUMENTS`:
+  - Single file → file's base name (e.g. `search-form`)
+  - Module / directory → module name (e.g. `features-list`)
+  - Multi-module / project-wide → `all` or `multi`
+- Examples: `2026-05-19-1430-search-form.md`, `2026-05-19-1635-features-list.md`
+
+> Each test run produces a **new** file — do not overwrite previous reports. Historical reports are immutable snapshots, same spirit as `docs/retrospectives/`.
+
+#### Report Content (mandatory sections)
+
+Use the template at `docs/test-reports/_template.md` as the skeleton. Required sections:
+
+1. **Metadata** — date, target (`$ARGUMENTS`), executor (`/test`), vitest version, total duration
+2. **Execution Summary** — total / passed / failed / skipped, plus a failing-case table (`it()` name + error message excerpt + source file + linked `@rules` entry) if any
+3. **Business Rule Traceability Matrix** — **the core section**. For each source file:
+
+   | Rule ID | Rule Text (verbatim from @rules) | Source | `it()` Description | Status |
+   |---------|---------------------------------|--------|---------------------|--------|
+   | R1 | Phone number must pass PHONE_REG validation after input | `@rules` / PRD#search-form/rule1 | `should show error when phone number format is invalid` | ✅ Pass |
+   | R2 | Search button disabled when all fields empty | `@rules` | `should disable search button when all fields are empty` | ❌ Fail |
+   | R3 | After reset, automatically trigger one query | `@task#task-003 acceptance` | (missing) | ⚠️ Uncovered |
+
+   Plus an explicit **Rule Coverage** line: `Rule coverage: <covered>/<total> = <percentage>%` (this is the project's true coverage metric — not line coverage, per `.claude/rules/testing.md`).
+
+4. **Changes This Round** — added / modified / removed test cases compared to the previous report or git baseline; one-line reason each
+5. **Open Issues & Recommendations** — failures triaged by category (test code / environment / source bug), follow-up items needing human attention, and which rules are still uncovered
+
+#### Quick Checklist Before Closing
+
+- [ ] Report file actually written to `docs/test-reports/`?
+- [ ] Filename follows `<YYYY-MM-DD-HHmm>-<scope>.md`?
+- [ ] Every targeted source file appears in the traceability matrix?
+- [ ] Rule coverage line present and numeric?
+- [ ] Failing cases (if any) carry both the error excerpt and the violated rule ID?
+- [ ] `docs/test-reports/README.md` updated if this is a new naming-scope or convention change? (only when applicable)
+
+If any item is missing, fix the report before exiting — do not hand off an incomplete file.
 
 Please execute the above flow for the following targets:
 $ARGUMENTS
