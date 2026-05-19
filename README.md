@@ -42,9 +42,10 @@ AI executes, humans supervise every critical checkpoint · Runs on top of <a hre
 - [Framework Five-Part Architecture](#framework-five-part-architecture)
 - [Eight-Step Workflow Scaffold](#eight-step-workflow-scaffold)
 - [Three Design Principles](#three-design-principles)
+- [Proof in the Wild](#proof-in-the-wild)
 - [Directory Overview](#directory-overview)
 - [How to Use](#how-to-use)
-- [Branch Guide](#branch-guide)
+- [Branch Guide & Related Repos](#branch-guide--related-repos)
 - [Where to Start](#where-to-start)
 - [License](#license)
 
@@ -154,6 +155,39 @@ When things go red, triage by four categories (tools → environment → expecta
 
 ---
 
+## Proof in the Wild
+
+The framework is not a thought experiment — it has been re-applied across **three different stacks, three different platforms, and three different domains**, without rewriting the core. Each project below ships with its own `methodology-report.md` for an honest accounting of what worked and what did not.
+
+| Project | Domain | Stack | Status | What it proves |
+|---------|--------|-------|--------|----------------|
+| [`ai-frontend`](../../tree/ai-frontend) | Web admin | UmiJS + React + Antd + Vitest + Playwright | Reference implementation | The original frontend incarnation — every mechanism (Gates, `@rules`, traceability) was born here |
+| [**Spider**](https://github.com/suntaoTom/spider) | Desktop dev tool | Tauri 2 + Rust + React | Active dev · 16 commits | **Cross-stack**: methodology survives the TS-only → Rust + TS double-stack jump. PRD anchors map cleanly from JSDoc to Rust `///` docs, IPC introduces a new "no-hardcode" red line |
+| **Cpcash Wallet** *(private repo, available on request)* | Web3 mobile wallet | Flutter (Dart) on Android · iOS · **HarmonyOS** | **Production · 138 commits · Phase 2 in progress** | **Cross-platform & cross-domain**: 167 tasks closed at 100% completion, 4 bugs fully closed-loop, dev + staging releases shipped in 13 days |
+
+### What the numbers actually say
+
+**Cpcash Wallet** (the highest-fidelity case):
+- **138 commits in 13 days**, every commit carrying a task ID (`T001-T043 — 43/43 = 100%`)
+- **167 tasks closed at 100%** across 5 modules (account / assets / home / transfer / receive)
+- **4 structured bug reports** drove `/fix` to closed-loop (bug density ≈ 2.4%, low for Web3)
+- **3 platforms shipped from one Dart codebase** (Android / iOS / HarmonyOS), including a HarmonyOS-specific `MissingPluginException` resolved in-line without forking a platform branch
+
+**Spider** (the meta case):
+- The product *itself* visualizes any `claude-code-workflow` repo as a kanban — **a tool built with the methodology to render the methodology**
+- React (15 feature modules) + Rust backend (PTY / scan / watcher / IPC) — same `@prd / @task / @rules` chain works across both
+- Demonstrates that the framework's "domain layer" can be a developer-tool product, not just business apps
+
+### What the projects also revealed (honest gaps)
+
+- **Spider's slowdown after 16 commits** suggests the 8-step PRD-first flow has higher overhead in exploratory tooling work — a real boundary case for "When NOT to use the framework"
+- **Test coverage in Cpcash skewed toward UI bug reports** rather than widget tests — the methodology supports both but doesn't yet force the right balance for Flutter projects
+- **Token economics are still unmeasured** — needed before recommending the framework for cost-sensitive teams
+
+> Full reports: [Spider methodology report](https://github.com/suntaoTom/spider/blob/main/docs/methodology-report.md) · Cpcash methodology report (private repo, available on request)
+
+---
+
 ## Directory Overview
 
 ```text
@@ -210,7 +244,9 @@ The framework core itself **requires no extra installation** — Claude Code CLI
 
 ---
 
-## Branch Guide
+## Branch Guide & Related Repos
+
+### Branches in this repo
 
 | Branch        | Purpose                                                                     |
 | ------------- | --------------------------------------------------------------------------- |
@@ -219,7 +255,14 @@ The framework core itself **requires no extra installation** — Claude Code CLI
 | `feature`     | Integration branch for development                                          |
 | `Harness`     | Iteration branch for the framework core                                     |
 
-To see a full domain example, check out the corresponding branch (e.g., `git checkout ai-frontend`). `ai-backend` / `ai-data` and other branches will be added over time.
+### Sister repos (built with this methodology)
+
+| Repo | What it is | Why look at it |
+|------|------------|----------------|
+| [**Spider**](https://github.com/suntaoTom/spider) | Tauri 2 desktop tool that visualizes any `claude-code-workflow` repo as a kanban | Proves the framework works on **Rust + React** double-stack and inside a developer-tool product |
+| **Cpcash Wallet** *(private repo)* | Flutter Web3 wallet (Android · iOS · HarmonyOS) | Proves the framework works on **Flutter / Dart**, on three mobile OSes, in a high-stakes domain (crypto), and at production scale (138 commits, 167 tasks closed) |
+
+To see a full domain example, check out the `ai-frontend` branch in this repo or browse the sister repos above. `ai-backend` / `ai-data` and other branches will be added over time.
 
 ---
 
