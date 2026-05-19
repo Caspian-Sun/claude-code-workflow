@@ -1,6 +1,6 @@
 <div align="center">
 
-**Language:** [**English**](https://github.com/suntaoTom/claude-code-work/blob/main/README.md) | [简体中文](https://github.com/suntaoTom/claude-code-work/blob/main-zh/README.md)
+**Language:** [**English**](https://github.com/Caspian-Sun/claude-code-workflow/blob/main/README.md) | [简体中文](https://github.com/Caspian-Sun/claude-code-workflow/blob/main-zh/README.md)
 
 # Claude Code WorkFlow
 
@@ -17,10 +17,10 @@ AI executes, humans supervise every critical checkpoint · Runs on top of <a hre
   <img src="https://img.shields.io/badge/status-active-success.svg" alt="Status" />
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" />
   <br />
-  <a href="https://github.com/suntaoTom/claude-code-work/stargazers"><img src="https://img.shields.io/github/stars/suntaoTom/claude-code-work?style=social" alt="Stars" /></a>
-  <a href="https://github.com/suntaoTom/claude-code-work/commits"><img src="https://img.shields.io/github/last-commit/suntaoTom/claude-code-work" alt="Last commit" /></a>
-  <a href="https://github.com/suntaoTom/claude-code-work/issues"><img src="https://img.shields.io/github/issues/suntaoTom/claude-code-work" alt="Issues" /></a>
-  <a href="https://github.com/suntaoTom/claude-code-work/releases"><img src="https://img.shields.io/github/v/release/suntaoTom/claude-code-work?include_prereleases&sort=semver" alt="Release" /></a>
+  <a href="https://github.com/Caspian-Sun/claude-code-workflow/stargazers"><img src="https://img.shields.io/github/stars/Caspian-Sun/claude-code-workflow?style=social" alt="Stars" /></a>
+  <a href="https://github.com/Caspian-Sun/claude-code-workflow/commits"><img src="https://img.shields.io/github/last-commit/Caspian-Sun/claude-code-workflow" alt="Last commit" /></a>
+  <a href="https://github.com/Caspian-Sun/claude-code-workflow/issues"><img src="https://img.shields.io/github/issues/Caspian-Sun/claude-code-workflow" alt="Issues" /></a>
+  <a href="https://github.com/Caspian-Sun/claude-code-workflow/releases"><img src="https://img.shields.io/github/v/release/Caspian-Sun/claude-code-workflow?include_prereleases&sort=semver" alt="Release" /></a>
 </p>
 
 <p>
@@ -162,7 +162,7 @@ The framework is not a thought experiment — it has been re-applied across **th
 | Project | Domain | Stack | Status | What it proves |
 |---------|--------|-------|--------|----------------|
 | [`ai-frontend`](../../tree/ai-frontend) | Web admin | UmiJS + React + Antd + Vitest + Playwright | Reference implementation | The original frontend incarnation — every mechanism (Gates, `@rules`, traceability) was born here |
-| [**Spider**](https://github.com/suntaoTom/spider) | Desktop dev tool | Tauri 2 + Rust + React | Active dev · 16 commits | **Cross-stack**: methodology survives the TS-only → Rust + TS double-stack jump. PRD anchors map cleanly from JSDoc to Rust `///` docs, IPC introduces a new "no-hardcode" red line |
+| [**Spider**](https://github.com/Caspian-Sun/spider) | Desktop dev tool | Tauri 2 + Rust + React | Active dev · 16 commits | **Cross-stack**: methodology survives the TS-only → Rust + TS double-stack jump. PRD anchors map cleanly from JSDoc to Rust `///` docs, IPC introduces a new "no-hardcode" red line |
 | **Cpcash Wallet** *(private repo, available on request)* | Web3 mobile wallet | Flutter (Dart) on Android · iOS · **HarmonyOS** | **Production · 138 commits · Phase 2 in progress** | **Cross-platform & cross-domain**: 167 tasks closed at 100% completion, 4 bugs fully closed-loop, dev + staging releases shipped in 13 days |
 
 ### What the numbers actually say
@@ -184,7 +184,7 @@ The framework is not a thought experiment — it has been re-applied across **th
 - **Test coverage in Cpcash skewed toward UI bug reports** rather than widget tests — the methodology supports both but doesn't yet force the right balance for Flutter projects
 - **Token economics are still unmeasured** — needed before recommending the framework for cost-sensitive teams
 
-> Full reports: [Spider methodology report](https://github.com/suntaoTom/spider/blob/main/docs/methodology-report.md) · Cpcash methodology report (private repo, available on request)
+> Full reports: [Spider methodology report](https://github.com/Caspian-Sun/spider/blob/main/docs/methodology-report.md) · Cpcash methodology report (private repo, available on request)
 
 ---
 
@@ -226,7 +226,7 @@ claude-code-work/
 
 ```bash
 # 1. Fork this repo and rename it for your domain
-git clone https://github.com/suntaoTom/claude-code-work.git ai-<domain>-automation
+git clone https://github.com/Caspian-Sun/claude-code-workflow.git ai-<domain>-automation
 cd ai-<domain>-automation
 
 # 2. Follow ADAPTING.md to swap in your domain layer
@@ -259,7 +259,7 @@ The framework core itself **requires no extra installation** — Claude Code CLI
 
 | Repo | What it is | Why look at it |
 |------|------------|----------------|
-| [**Spider**](https://github.com/suntaoTom/spider) | Tauri 2 desktop tool that visualizes any `claude-code-workflow` repo as a kanban | Proves the framework works on **Rust + React** double-stack and inside a developer-tool product |
+| [**Spider**](https://github.com/Caspian-Sun/spider) | Tauri 2 desktop tool that visualizes any `claude-code-workflow` repo as a kanban | Proves the framework works on **Rust + React** double-stack and inside a developer-tool product |
 | **Cpcash Wallet** *(private repo)* | Flutter Web3 wallet (Android · iOS · HarmonyOS) | Proves the framework works on **Flutter / Dart**, on three mobile OSes, in a high-stakes domain (crypto), and at production scale (138 commits, 167 tasks closed) |
 
 To see a full domain example, check out the `ai-frontend` branch in this repo or browse the sister repos above. `ai-backend` / `ai-data` and other branches will be added over time.
