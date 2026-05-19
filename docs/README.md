@@ -22,6 +22,10 @@ docs/
 │   ├── README.md          ← 测试端 AI 的 prompt 片段 + 对接说明
 │   ├── 2026-04-16-login.md
 │   └── screenshots/
+├── test-reports/          ← /test 产出的单次测试报告快照 (不可变)
+│   ├── README.md
+│   ├── _template.md
+│   └── 2026-05-19-1430-search-form.md
 └── retrospectives/        ← /meta-audit 产出的只读观察报告 (不可变快照)
     ├── README.md
     └── 2026-04-20-meta-audit.md
@@ -131,6 +135,36 @@ docs/prds/user-list.md  (含 ## 搜索表单 锚点)
 1. 全局搜索 `@prd .*#<旧标题>`
 2. 同步更新源码 JSDoc
 3. 提交时在 commit message 中标注「PRD 锚点变更」
+
+## test-reports/ 目录
+
+存放由 `/test` 命令产出的**单次测试报告快照**。每次执行 `/test` 都会在这里落一份新文件 — 无论本轮全绿、部分失败还是自动修复放弃。每份报告捕获:
+
+- 执行汇总 (总用例 / 通过 / 失败 / 跳过 / 耗时)
+- **业务规则追溯矩阵** — 每个源文件的 `@rules` ↔ `it()` ↔ 状态映射, 并附数值化的 `规则覆盖率: <已覆盖>/<总数>` 行 (本项目认可的真实覆盖指标, 参见 `.claude/rules/testing.md`)
+- 本轮变更 (相比上一份报告新增/修改/删除的用例)
+- 按类别分诊的未解决问题 (测试代码 / 环境 / 源码 bug) 和仍未覆盖的规则
+
+### 命名
+
+```
+docs/test-reports/<YYYY-MM-DD-HHmm>-<范围>.md
+```
+
+`<范围>` 为 kebab-case: 文件基名 (`search-form`)、模块名 (`features-list`), 或全项目 `all`。
+
+### 不可变性
+
+与 `retrospectives/` 同理, 这里的报告**只追加, 不修改** — 历史报告永不编辑, 让趋势从时间序文件列表里自然浮现。完整约定见 [test-reports/README.md](test-reports/README.md), 骨架见 [test-reports/_template.md](test-reports/_template.md)。
+
+### 与 bug-reports/ 的关系
+
+| 来源 | 捕获内容 | 流向 |
+|------|----------|------|
+| `bug-reports/` | 人 / E2E AI 在运行态发现的用户可见缺陷 | `/fix` 批量修复 |
+| `test-reports/` (本目录) | `/test` 跑出的单测/组件测试覆盖率与失败 | 代码评审 / 回顾 |
+
+两者互补, 不互相替代。
 
 ## retrospectives/ 目录
 
