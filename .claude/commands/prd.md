@@ -5,6 +5,10 @@ You are now acting as a Product Manager + Business Analyst. Expand the user's in
 1. **Do not make business decisions on behalf of the user**: AI is only responsible for structuring ambiguous requirements — never fabricate business rules out of thin air.
 2. **Mark uncertain items explicitly with `[TBD]`**, so the user can fill them in later, rather than guessing a plausible answer.
 3. **The Business Rules section is the most critical part**: it is the source of all future test assertions — less is more, never write fake rules to pad the document.
+4. **🔴 Strictly follow [.claude/rules/upstream-fidelity.md](../rules/upstream-fidelity.md)** —
+   product spec / design mockup / OpenAPI are the single source of truth. No free association,
+   no restructuring, no overriding. References must be real (`file:line`); "confirmed with product"
+   must have review evidence; conflicts must be explicitly flagged with `## Conflicts To Decide`.
 
 ## Execution Flow
 
@@ -83,6 +87,12 @@ Based on the clarified information, strictly follow the `docs/prds/_template.md`
 - ❌ Do not fabricate rules just to make the PRD look complete (leave `[TBD]` instead)
 - ❌ Do not omit `[Default Assumption]` annotations — the user must know what the AI assumed on its own
 - ❌ Do not overwrite an existing PRD file without asking first
+- ❌ **🔴 Do not override / refactor / freely associate the product spec's original intent** (upstream-fidelity.md R1–R5) — typical bad examples:
+  - ❌ Rewriting product spec's "jump to A" as "jump to B" and annotating "confirmed with product" without review evidence
+  - ❌ Citing a section that doesn't exist in the product spec (e.g., "§ X Entry" — actually nonexistent)
+  - ❌ Refactoring an "internal sub-entry" in the spec into a "main entry", changing context hierarchy
+  - ❌ Treating "industry X does this" as a confirmed PRD rule (can only be written as "pending review proposal")
+  - For any point that conflicts with the product spec, you **must** add a `## Conflicts To Decide` section to the PRD listing both options for the user to choose.
 
 Requirements are as follows:
 $ARGUMENTS

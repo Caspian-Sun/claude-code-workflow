@@ -60,6 +60,61 @@ If absent from both → fails.
 
 - **On failure**: list the operationIds missing stubs
 
+### Check 6: Upstream Fidelity (P0, 🔴 must pass)
+
+> Per [.claude/rules/upstream-fidelity.md](../rules/upstream-fidelity.md), prevent the PRD from free-associating / overriding the product spec's original intent.
+
+#### 6.A Reference authenticity (P0)
+
+Scan all upstream references in the PRD:
+- `Product spec §...` / `Product spec §"..."`
+- `Design mockup ...png` / `docs/designs/...`
+- `OpenAPI ...json`
+
+For each reference:
+- ☐ The referenced file **actually exists** (verify with Read)
+- ☐ The referenced section / anchor **actually exists in the file** (verify with grep)
+- ☐ Prefer references with line numbers (e.g., `wallet-spec.md:367`); for plain `§"X"` form, must be grep-matchable
+
+**Failure example**:
+```
+home.md L167: Product spec §"Wallet Switch Entry" requirement
+  → grep "Wallet Switch Entry" docs/prds/_imports/  →  0 hits
+  → 🔴 Referenced section does not exist
+```
+
+#### 6.B Fake-review interception (P0)
+
+Scan the entire PRD for the following phrases; if any are matched, there **must** be corresponding review evidence:
+- "Confirmed with product" / "Confirmed with design" / "Discussed with product"
+- "Product approved" / "Product decided" / "Product finalized"
+- "Review approved" / "Review confirmed"
+- "Confirmed with @X" (where X is a person's name)
+
+**Review evidence** is only accepted in one of these forms:
+- A row in the same file's "## Change Log" table (date / reviewer / decision)
+- The associated commit message contains `Reviewed-by:` or reviewer trailers
+- The PR/MR has product reviewer approval
+
+#### 6.C Industry-practice interception (P1)
+
+Scan the PRD for cases where "industry practice" is treated as a confirmed rule:
+- "Industry standard is X" / "Reference MetaMask / Trust Wallet / WeChat / Alipay ..."
+- "Similar to X's approach" / "This is how it's usually done in the market"
+- "This is better / more intuitive / saves steps"
+
+Such wording **must only appear in a `## Pending Review Proposals` section**, not in business rule body text.
+
+#### 6.D Conflicts made explicit (P1)
+
+Scan whether the PRD contains a `## Conflicts To Decide` section:
+- If present → block `/plan` (hard block); must resolve first
+- If absent → check whether key fields in the PRD match the product spec (for critical interactions):
+  - Navigation paths (tap X → jump to Y)
+  - Field names / API names
+  - Process steps
+  - On mismatch → warn "Not listed in `## Conflicts To Decide`, may have been overlooked"
+
 ## Supplementary Checks (soft prompts, non-blocking)
 
 The following only issue warnings and do not affect pass/fail:
@@ -75,12 +130,13 @@ The following only issue warnings and do not affect pass/fail:
 ```
 ✅ PRD completeness check passed: docs/prds/login.md
 
-Passed checks (5/5):
+Passed checks (6/6):
   ✅ No [TBD]
   ✅ No out-of-bounds [TBD]
   ✅ Business rules have no placeholders
   ✅ Data contract status column complete (5 operationIds)
   ✅ 🆕 Interface stubs complete (5)
+  ✅ Upstream fidelity (references real / no fake reviews / no industry-practice mixing / no unlisted conflicts)
 
 ⚠️ Soft prompts (non-blocking):
   • 6 [Default Assumption] items in the document — please confirm each at the review meeting
